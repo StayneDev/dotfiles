@@ -1,4 +1,21 @@
+# SSH configuration file
+
+Host makinanote
+    HostName 100.110.44.96
+    User makina
+    PreferredAuthentications publickey,keyboard-interactive,password
+
+Host makinadesk
+    HostName 100.79.189.85
+    User makina
+    PreferredAuthentications publickey,keyboard-interactive,password
+
+Host makinaproxmox
+    HostName 100.81.65.48
+    User root
+    PreferredAuthentications gssapi-with-mic,hostbased,publickey,keyboard-interactive,password
+
 Host proxmox
-    HostName 10.10.10.200
+    HostName 100.81.65.48
     User root
     PreferredAuthentications gssapi-with-mic,hostbased,publickey,keyboard-interactive,password

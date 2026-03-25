@@ -62,7 +62,9 @@
     "groups": {},
     "connections": {},
     "root_connections": [
-      "proxmox"
+      "makinanote",
+      "makinadesk",
+      "makinaproxmox"
     ]
   }
 }
