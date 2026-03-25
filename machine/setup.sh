@@ -369,6 +369,15 @@ runtime_logins() {
 }
 
 # =============================================================================
+# 10. CLAUDE CONFIG (skills, settings — repo dedicado)
+# =============================================================================
+install_claude_config() {
+  echo -e "\n[10/10] Configurando Claude Code (skills e settings)..."
+  bash <(curl -fsSL https://raw.githubusercontent.com/StayneDev/claude-config/main/install.sh)
+  echo "  [OK] Claude config instalado."
+}
+
+# =============================================================================
 # EXECUCAO
 # =============================================================================
 
@@ -387,6 +396,7 @@ show_help() {
   echo "    --java          JDK 21"
   echo "    --node          nvm + Node LTS + Claude Code"
   echo "    --sshpilot      sshpilot (AUR / APT / COPR)"
+  echo "    --claude        Claude skills, settings e sync automático"
   echo ""
   echo "  Configuracao:"
   echo "    --terminal      Zsh + Oh My Zsh + tema bira"
@@ -417,6 +427,7 @@ case "$1" in
   --steam)      login_steam ;;
   --tailscale)  login_tailscale ;;
   --logins)     runtime_logins ;;
+  --claude)     install_claude_config ;;
   --help|-h)    show_help ;;
   "")
     detect_distro
@@ -428,6 +439,7 @@ case "$1" in
     setup_terminal
     setup_git_ssh
     setup_firefox
+    install_claude_config
     runtime_logins
     echo ""
     echo "============================================================"
