@@ -369,7 +369,36 @@ runtime_logins() {
 }
 
 # =============================================================================
-# 10. CLAUDE CONFIG (skills, settings — repo dedicado)
+# 10. VSCODE — extensões e settings
+# =============================================================================
+setup_vscode() {
+  echo -e "\n[vscode] Aplicando settings e instalando extensões..."
+
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  VSCODE_SETTINGS_DIR="$HOME/.config/Code/User"
+  mkdir -p "$VSCODE_SETTINGS_DIR"
+
+  if [ -f "$SCRIPT_DIR/vscode-settings.json" ]; then
+    cp "$SCRIPT_DIR/vscode-settings.json" "$VSCODE_SETTINGS_DIR/settings.json"
+    echo "  [OK] Settings aplicados."
+  fi
+
+  if [ -f "$SCRIPT_DIR/vscode-extensions.txt" ]; then
+    if ! command -v code &>/dev/null; then
+      echo "  [AVISO] VSCode não encontrado. Instale primeiro com --base."
+      return
+    fi
+    echo "  Instalando extensões..."
+    while IFS= read -r ext; do
+      [[ -z "$ext" || "$ext" == \#* ]] && continue
+      code --install-extension "$ext" --force 2>/dev/null && echo "  [OK] $ext" || echo "  [ERRO] $ext"
+    done < "$SCRIPT_DIR/vscode-extensions.txt"
+    echo "  [OK] Extensões instaladas."
+  fi
+}
+
+# =============================================================================
+# 11. CLAUDE CONFIG (skills, settings — repo dedicado)
 # =============================================================================
 install_claude_config() {
   echo -e "\n[10/10] Configurando Claude Code (skills e settings)..."
@@ -396,6 +425,7 @@ show_help() {
   echo "    --java          JDK 21"
   echo "    --node          nvm + Node LTS + Claude Code"
   echo "    --sshpilot      sshpilot (AUR / APT / COPR)"
+  echo "    --vscode        Settings e extensões do VSCode"
   echo "    --claude        Claude skills, settings e sync automático"
   echo ""
   echo "  Configuracao:"
@@ -427,6 +457,7 @@ case "$1" in
   --steam)      login_steam ;;
   --tailscale)  login_tailscale ;;
   --logins)     runtime_logins ;;
+  --vscode)     setup_vscode ;;
   --claude)     install_claude_config ;;
   --help|-h)    show_help ;;
   "")
@@ -439,6 +470,7 @@ case "$1" in
     setup_terminal
     setup_git_ssh
     setup_firefox
+    setup_vscode
     install_claude_config
     runtime_logins
     echo ""
