@@ -1,0 +1,4 @@
+Host proxmox
+    HostName 10.10.10.200
+    User root
+    PreferredAuthentications gssapi-with-mic,hostbased,publickey,keyboard-interactive,password

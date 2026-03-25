@@ -185,7 +185,7 @@ pause() {
 setup_git_ssh() {
   echo -e "\n[6/7] Configurando Git e chave SSH..."
 
-  git config --global user.name "makalyster"
+  git config --global user.name "StayneDev"
   git config --global user.email "makalyster.devops@gmail.com"
   git config --global init.defaultBranch main
 
