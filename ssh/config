@@ -15,7 +15,3 @@ Host makinaproxmox
     User root
     PreferredAuthentications gssapi-with-mic,hostbased,publickey,keyboard-interactive,password
 
-Host proxmox
-    HostName 100.81.65.48
-    User root
-    PreferredAuthentications gssapi-with-mic,hostbased,publickey,keyboard-interactive,password
