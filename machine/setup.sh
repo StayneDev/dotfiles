@@ -239,8 +239,8 @@ setup_git_ssh() {
   echo "  $PUB_KEY"
   echo "  ============================================================"
 
-  # Abre GitHub no browser para adicionar a chave
-  xdg-open "https://github.com/settings/keys" 2>/dev/null &
+  # Abre GitHub no browser para adicionar a chave (so se houver display)
+  [ -n "$DISPLAY" ] && xdg-open "https://github.com/settings/keys" 2>/dev/null &
 
   pause "Cole a chave SSH no GitHub (github.com/settings/keys) e clique em 'Add SSH key'"
 
