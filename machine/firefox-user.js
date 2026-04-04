@@ -9,6 +9,12 @@ user_pref("browser.startup.page", 3);
 user_pref("browser.aboutConfig.showWarning", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
 
+// --- Extensoes — habilitar automaticamente sem prompt ---
+// Permite que extensoes instaladas no perfil (ex: Bitwarden via XPI)
+// sejam ativadas sem exigir confirmacao manual do usuario
+user_pref("extensions.autoDisableScopes", 0);
+user_pref("extensions.enabledScopes", 15);
+
 // --- Senhas e formularios ---
 user_pref("signon.rememberSignons", false);
 user_pref("signon.autofillForms", false);

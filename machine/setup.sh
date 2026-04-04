@@ -414,6 +414,7 @@ login_firefox() {
     echo "  >> Se nao aparecer, use o link de fallback:"
     echo "     $BITWARDEN_AMO"
     echo "  >> Importe suas configuracoes/cofre se necessario"
+    echo "  >> Pin na toolbar: botao direito no icone > Fixar na barra"
     echo "  >> MINIMIZE o Firefox (nao feche)"
     echo "  ============================================================"
   else
@@ -425,6 +426,7 @@ login_firefox() {
     echo "  >> Clique em 'Adicionar ao Firefox' para instalar"
     echo "  >> Faca login na sua conta Bitwarden"
     echo "  >> Importe suas configuracoes/cofre se necessario"
+    echo "  >> Pin na toolbar: botao direito no icone > Fixar na barra"
     echo "  >> MINIMIZE o Firefox (nao feche)"
     echo "  ============================================================"
   fi
