@@ -376,25 +376,34 @@ setup_vscode() {
 
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   VSCODE_SETTINGS_DIR="$HOME/.config/Code/User"
+  DOTFILES_RAW="https://raw.githubusercontent.com/StayneDev/dotfiles/main/machine"
   mkdir -p "$VSCODE_SETTINGS_DIR"
 
+  # settings.json — local ou fallback via curl
   if [ -f "$SCRIPT_DIR/vscode-settings.json" ]; then
     cp "$SCRIPT_DIR/vscode-settings.json" "$VSCODE_SETTINGS_DIR/settings.json"
-    echo "  [OK] Settings aplicados."
+  else
+    curl -fsSL "$DOTFILES_RAW/vscode-settings.json" -o "$VSCODE_SETTINGS_DIR/settings.json"
+  fi
+  echo "  [OK] Settings aplicados."
+
+  # vscode-extensions.txt — local ou fallback via curl
+  EXTENSIONS_FILE="$SCRIPT_DIR/vscode-extensions.txt"
+  if [ ! -f "$EXTENSIONS_FILE" ]; then
+    EXTENSIONS_FILE="/tmp/vscode-extensions.txt"
+    curl -fsSL "$DOTFILES_RAW/vscode-extensions.txt" -o "$EXTENSIONS_FILE"
   fi
 
-  if [ -f "$SCRIPT_DIR/vscode-extensions.txt" ]; then
-    if ! command -v code &>/dev/null; then
-      echo "  [AVISO] VSCode não encontrado. Instale primeiro com --base."
-      return
-    fi
-    echo "  Instalando extensões..."
-    while IFS= read -r ext; do
-      [[ -z "$ext" || "$ext" == \#* ]] && continue
-      code --install-extension "$ext" --force 2>/dev/null && echo "  [OK] $ext" || echo "  [ERRO] $ext"
-    done < "$SCRIPT_DIR/vscode-extensions.txt"
-    echo "  [OK] Extensões instaladas."
+  if ! command -v code &>/dev/null; then
+    echo "  [AVISO] VSCode não encontrado. Instale primeiro com --base."
+    return
   fi
+  echo "  Instalando extensões..."
+  while IFS= read -r ext; do
+    [[ -z "$ext" || "$ext" == \#* ]] && continue
+    code --install-extension "$ext" --force 2>/dev/null && echo "  [OK] $ext" || echo "  [ERRO] $ext"
+  done < "$EXTENSIONS_FILE"
+  echo "  [OK] Extensões instaladas."
 }
 
 # =============================================================================
