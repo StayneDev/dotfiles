@@ -323,8 +323,11 @@ setup_firefox() {
   POLICIES_DIRS=(
     "/usr/lib/firefox/distribution"
     "/usr/lib64/firefox/distribution"
-    "$HOME/.var/app/org.mozilla.firefox/etc/firefox/policies"
   )
+  # Adiciona caminho Flatpak apenas se Flatpak Firefox estiver instalado
+  if flatpak list --app 2>/dev/null | grep -q org.mozilla.firefox; then
+    POLICIES_DIRS+=("$HOME/.var/app/org.mozilla.firefox/etc/firefox/policies")
+  fi
   local BITWARDEN_POLICY='{
   "policies": {
     "ExtensionSettings": {
