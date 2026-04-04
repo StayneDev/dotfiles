@@ -101,8 +101,8 @@ EOF
 # =============================================================================
 install_flatpak_apps() {
   echo -e "\n[2/7] Instalando apps via Flatpak..."
-  flatpak install -y flathub com.discordapp.Discord
-  flatpak install -y flathub com.valvesoftware.Steam
+  sudo flatpak install -y flathub com.discordapp.Discord
+  sudo flatpak install -y flathub com.valvesoftware.Steam
   # Firefox nao e instalado aqui — distros ja incluem versao nativa.
   # Flatpak e usado apenas como fallback via --firefox quando nativo ausente.
 }
@@ -375,7 +375,7 @@ install_sshpilot() {
     debian|fedora)
       # Debian Bookworm tem libadwaita 1.2.x (requer >= 1.4) — usa Flatpak autocontido
       # Fedora: Flatpak evita conflitos de versao de lib entre releases
-      flatpak install -y flathub io.github.mfat.sshpilot
+      sudo flatpak install -y flathub io.github.mfat.sshpilot
       ;;
   esac
   echo "  [OK] sshpilot instalado."
