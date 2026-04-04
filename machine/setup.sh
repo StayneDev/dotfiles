@@ -319,67 +319,24 @@ setup_firefox() {
   fi
   echo "  [OK] user.js aplicado (privacidade + seguranca)."
 
-  # --- Bitwarden via policies.json (force_installed) ---
-  # Detecta dinamicamente o diretorio de instalacao do Firefox nativo
-  POLICIES_DIRS=()
-  local FF_BIN
-  FF_BIN=$(command -v firefox 2>/dev/null)
-  if [ -n "$FF_BIN" ]; then
-    local FF_REAL FF_DIR
-    FF_REAL=$(readlink -f "$FF_BIN")
-    FF_DIR=$(dirname "$FF_REAL")
-    POLICIES_DIRS+=("$FF_DIR/distribution")
-    # Cobre casos onde o binario e um wrapper (ex: /usr/bin -> /usr/lib/firefox-esr)
-    local FF_LIB_DIR
-    FF_LIB_DIR=$(find /usr/lib /usr/lib64 -maxdepth 1 -name "firefox*" -type d 2>/dev/null | head -5)
-    while IFS= read -r DIR; do
-      [[ -d "$DIR" ]] && POLICIES_DIRS+=("$DIR/distribution")
-    done <<< "$FF_LIB_DIR"
-  fi
-  # Flatpak Firefox — apenas se instalado
-  if flatpak list --app 2>/dev/null | grep -q org.mozilla.firefox; then
-    POLICIES_DIRS+=("$HOME/.var/app/org.mozilla.firefox/etc/firefox/policies")
-  fi
-  # Remove duplicatas
-  readarray -t POLICIES_DIRS < <(printf '%s\n' "${POLICIES_DIRS[@]}" | sort -u)
-
-  local BITWARDEN_POLICY='{
-  "policies": {
-    "ExtensionSettings": {
-      "{446900e4-71c2-419f-a6a7-df9c091e268b}": {
-        "installation_mode": "force_installed",
-        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/bitwarden-password-manager/latest.xpi"
-      }
-    }
-  }
-}'
-  echo "$BITWARDEN_POLICY" > /tmp/firefox_policies.json
-  local POLICY_APPLIED=false
-  for DIR in "${POLICIES_DIRS[@]}"; do
-    if [[ "$DIR" == /usr/* || "$DIR" == /opt/* ]]; then
-      if sudo mkdir -p "$DIR" 2>/dev/null && sudo cp /tmp/firefox_policies.json "$DIR/policies.json"; then
-        echo "  [OK] Bitwarden policies.json em: $DIR"
-        POLICY_APPLIED=true
-      fi
-    else
-      if mkdir -p "$DIR" 2>/dev/null && cp /tmp/firefox_policies.json "$DIR/policies.json"; then
-        echo "  [OK] Bitwarden policies.json em: $DIR"
-        POLICY_APPLIED=true
-      fi
-    fi
-  done
-
-  if [ "$POLICY_APPLIED" = false ]; then
-    echo "  [AVISO] Nao foi possivel aplicar policies.json automaticamente."
-    echo "          Instale o Bitwarden manualmente em: https://addons.mozilla.org/firefox/addon/bitwarden-password-manager/"
+  # --- Bitwarden — instala XPI direto no perfil (sem polkit/policies) ---
+  local BITWARDEN_ID="{446900e4-71c2-419f-a6a7-df9c091e268b}"
+  local BITWARDEN_URL="https://addons.mozilla.org/firefox/downloads/latest/bitwarden-password-manager/latest.xpi"
+  local EXT_DIR="$FIREFOX_PROFILE/extensions"
+  mkdir -p "$EXT_DIR"
+  echo "  Baixando Bitwarden..."
+  if curl -fsSL "$BITWARDEN_URL" -o "$EXT_DIR/$BITWARDEN_ID.xpi"; then
+    echo "  [OK] Bitwarden instalado no perfil — sera ativado ao abrir o Firefox."
+  else
+    echo "  [AVISO] Falha ao baixar Bitwarden. Sera aberto o link de instalacao no login-firefox."
   fi
 
   echo ""
   echo "  ============================================================"
   echo "  Firefox configurado. Proximos passos:"
   echo "  1. Execute: bash setup.sh --login-firefox"
-  echo "  2. Bitwarden sera instalado automaticamente ao abrir o Firefox"
-  echo "  3. Faca login no Bitwarden e importe suas configuracoes"
+  echo "  2. Bitwarden abrira automaticamente — faca login"
+  echo "  3. Importe suas configuracoes/cofre se necessario"
   echo "  4. So entao execute: bash setup.sh --github"
   echo "  ============================================================"
 }
@@ -441,38 +398,35 @@ login_firefox() {
     return 1
   fi
 
-  # Verifica se policies.json foi aplicado (Bitwarden deveria instalar automaticamente)
-  local POLICY_FOUND=false
-  for DIR in /usr/lib/firefox*/distribution /usr/lib64/firefox*/distribution; do
-    [ -f "$DIR/policies.json" ] && POLICY_FOUND=true && break
-  done
+  local BITWARDEN_ID="{446900e4-71c2-419f-a6a7-df9c091e268b}"
+  local BITWARDEN_AMO="https://addons.mozilla.org/pt-BR/firefox/addon/bitwarden-password-manager/"
+  local FIREFOX_PROFILE
+  FIREFOX_PROFILE=$(_firefox_profile)
 
-  $FF_CMD &>/dev/null &
-  sleep 2
-
-  if [ "$POLICY_FOUND" = true ]; then
+  # Verifica se XPI foi instalado no perfil
+  if [ -n "$FIREFOX_PROFILE" ] && [ -f "$FIREFOX_PROFILE/extensions/$BITWARDEN_ID.xpi" ]; then
+    # XPI presente — abre Firefox normalmente, extensao sera ativada
+    $FF_CMD &>/dev/null &
     echo ""
     echo "  ============================================================"
-    echo "  Firefox aberto."
-    echo "  >> Bitwarden sera instalado automaticamente (aguarde alguns segundos)"
-    echo "  >> Se nao aparecer: clique no link abaixo para instalar com 1 clique"
-    echo "     https://addons.mozilla.org/firefox/addon/bitwarden-password-manager/"
-    echo "  >> Apos instalar, faca login no Bitwarden"
+    echo "  Firefox aberto. Bitwarden sera ativado automaticamente."
+    echo "  >> Faca login na sua conta Bitwarden"
+    echo "  >> Se nao aparecer, use o link de fallback:"
+    echo "     $BITWARDEN_AMO"
     echo "  >> Importe suas configuracoes/cofre se necessario"
     echo "  >> MINIMIZE o Firefox (nao feche)"
     echo "  ============================================================"
   else
+    # XPI ausente — abre direto na pagina de instalacao (1 clique)
+    $FF_CMD "$BITWARDEN_AMO" &>/dev/null &
     echo ""
     echo "  ============================================================"
-    echo "  Firefox aberto."
-    echo "  >> Policies nao detectadas — instale o Bitwarden manualmente:"
-    echo "     https://addons.mozilla.org/firefox/addon/bitwarden-password-manager/"
-    echo "  >> Apos instalar, faca login no Bitwarden"
-    echo "  >> Execute --firefox novamente para reaplicar as policies"
+    echo "  Firefox aberto na pagina do Bitwarden."
+    echo "  >> Clique em 'Adicionar ao Firefox' para instalar"
+    echo "  >> Faca login na sua conta Bitwarden"
+    echo "  >> Importe suas configuracoes/cofre se necessario"
+    echo "  >> MINIMIZE o Firefox (nao feche)"
     echo "  ============================================================"
-    # Abre a pagina do addon como fallback
-    sleep 1
-    $FF_CMD "https://addons.mozilla.org/firefox/addon/bitwarden-password-manager/" &>/dev/null &
   fi
 
   pause "Pressione ENTER quando o Bitwarden estiver instalado e logado"
