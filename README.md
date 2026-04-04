@@ -1,25 +1,35 @@
 # dotfiles
 
-Setup pós-formatação para Arch, Debian/Ubuntu e Fedora.
+> Setup pós-formatação para Arch, Debian/Ubuntu e Fedora.
 
-## Instalação
+## Status
 
-O método padrão usa `curl` — não requer `git` nem clonar o repositório antes.
+`Produção`
+
+## Stack
+
+| Componente | Papel |
+|---|---|
+| Bash | Script de setup principal |
+| Zsh + Oh My Zsh | Shell padrão (tema bira) |
+| Flatpak | Apps universais (Discord, Steam, Firefox) |
+| VSCode | Editor com settings e extensões versionadas |
+
+## Pré-requisitos
+
+- `curl` — pré-instalado na maioria das distros modernas
+  - Fallback: `sudo apt install curl` / `sudo pacman -S curl` / `sudo dnf install curl`
+- Usuário comum com `sudo` disponível — não executar como root
+
+## Setup
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/StayneDev/dotfiles/main/machine/setup.sh)
 ```
 
-O script detecta a distro automaticamente e instala tudo em sequência, incluindo `git`.
+O script detecta a distro automaticamente e executa tudo em sequência, incluindo a instalação do `git`.
 
-> `curl` vem pré-instalado na grande maioria das distros modernas.
-> Se não estiver disponível: `sudo apt install curl` / `sudo pacman -S curl` / `sudo dnf install curl`
-
----
-
-## Módulos individuais
-
-Para instalar partes específicas:
+### Módulos individuais
 
 ```bash
 SETUP="bash <(curl -fsSL https://raw.githubusercontent.com/StayneDev/dotfiles/main/machine/setup.sh)"
@@ -44,7 +54,9 @@ eval "$SETUP" --discord     # abre Discord para login
 eval "$SETUP" --steam       # abre Steam para login
 ```
 
----
+> `--github` pausa e aguarda você adicionar a chave SSH no GitHub antes de continuar.
+> `--firefox` requer que o Firefox tenha sido aberto ao menos uma vez.
+> Reinicie o terminal após `--terminal` para o zsh ser aplicado.
 
 ## Estrutura
 
@@ -58,12 +70,7 @@ ssh/                      # configs de SSH
 sshpilot/                 # configs do sshpilot
 ```
 
----
+## Links
 
-## Observações
-
-- Execute como **usuário comum**, não como root
-- `--github` pausa e aguarda você adicionar a chave SSH no GitHub antes de continuar
-- `--firefox` requer que o Firefox tenha sido aberto ao menos uma vez
-- Reinicie o terminal após `--terminal` para o zsh ser aplicado
-- `--vscode` baixa os arquivos de configuração diretamente do repositório quando executado via curl
+- [Issues](../../issues)
+- [Roadmap](/opt/infra-backup/docs/roadmap.md)
