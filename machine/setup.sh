@@ -353,16 +353,13 @@ install_sshpilot() {
   echo -e "\n[sshpilot] Instalando sshpilot..."
   case $DISTRO in
     arch)
+      # Arch tem libadwaita atualizada — instala via AUR
       yay -S --noconfirm sshpilot
       ;;
-    debian)
-      curl -fsSL https://mfat.github.io/sshpilot-ppa/pubkey.gpg | sudo gpg --dearmor -o /usr/share/keyrings/sshpilot-ppa.gpg
-      echo "deb [signed-by=/usr/share/keyrings/sshpilot-ppa.gpg arch=amd64] https://mfat.github.io/sshpilot-ppa any main" | sudo tee /etc/apt/sources.list.d/sshpilot-ppa.list
-      sudo apt update && sudo apt install -y sshpilot
-      ;;
-    fedora)
-      sudo dnf copr enable -y mahdif62/sshpilot
-      sudo dnf install -y sshpilot
+    debian|fedora)
+      # Debian Bookworm tem libadwaita 1.2.x (requer >= 1.4) — usa Flatpak autocontido
+      # Fedora: Flatpak evita conflitos de versao de lib entre releases
+      flatpak install -y flathub io.github.mfat.sshpilot
       ;;
   esac
   echo "  [OK] sshpilot instalado."
