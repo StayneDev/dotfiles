@@ -338,15 +338,18 @@ setup_firefox() {
     }
   }
 }'
+  echo "$BITWARDEN_POLICY" > /tmp/firefox_policies.json
   for DIR in "${POLICIES_DIRS[@]}"; do
-    if sudo mkdir -p "$DIR" 2>/dev/null || mkdir -p "$DIR" 2>/dev/null; then
-      echo "$BITWARDEN_POLICY" > /tmp/firefox_policies.json
-      if [[ "$DIR" == /usr/* ]]; then
-        sudo cp /tmp/firefox_policies.json "$DIR/policies.json"
-      else
-        cp /tmp/firefox_policies.json "$DIR/policies.json"
+    if [[ "$DIR" == /usr/* ]]; then
+      # Caminho do sistema — requer sudo em ambas as operacoes
+      if sudo mkdir -p "$DIR" 2>/dev/null && sudo cp /tmp/firefox_policies.json "$DIR/policies.json"; then
+        echo "  [OK] Bitwarden policies.json em: $DIR"
       fi
-      echo "  [OK] Bitwarden policies.json em: $DIR"
+    else
+      # Caminho do usuario — sem sudo
+      if mkdir -p "$DIR" 2>/dev/null && cp /tmp/firefox_policies.json "$DIR/policies.json"; then
+        echo "  [OK] Bitwarden policies.json em: $DIR"
+      fi
     fi
   done
 
