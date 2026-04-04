@@ -457,10 +457,27 @@ login_tailscale() {
   fi
 }
 
+login_claude() {
+  echo -e "\n[Claude Code] Iniciando login..."
+  if ! command -v claude &>/dev/null; then
+    echo "  [AVISO] Claude Code nao encontrado. Instale primeiro com --node."
+    return 1
+  fi
+  echo ""
+  echo "  ============================================================"
+  echo "  Sera aberto o fluxo de autenticacao no browser."
+  echo "  >> Faca login com sua conta Anthropic"
+  echo "  >> Autorize o acesso quando solicitado"
+  echo "  ============================================================"
+  claude --dangerously-skip-permissions /login 2>/dev/null || true
+  pause "Pressione ENTER quando o login estiver concluido"
+}
+
 runtime_logins() {
   login_discord
   login_steam
   login_tailscale
+  login_claude
 }
 
 # =============================================================================
