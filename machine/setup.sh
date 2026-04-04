@@ -113,7 +113,22 @@ install_java() {
   echo -e "\n[3/7] Instalando JDK 21..."
   case $DISTRO in
     arch)    sudo pacman -S --noconfirm --needed jdk21-openjdk ;;
-    debian)  sudo apt install -y openjdk-21-jdk ;;
+    debian)
+      # openjdk-21 requer backports no Bookworm
+      if ! apt-cache show openjdk-21-jdk &>/dev/null; then
+        BACKPORTS="deb http://deb.debian.org/debian bookworm-backports main contrib non-free"
+        if ! grep -qF "bookworm-backports" /etc/apt/sources.list; then
+          echo "$BACKPORTS" | sudo tee -a /etc/apt/sources.list > /dev/null
+          sudo apt update
+        fi
+      fi
+      if apt-cache show openjdk-21-jdk &>/dev/null; then
+        sudo apt install -y -t bookworm-backports openjdk-21-jdk
+      else
+        echo "  [AVISO] openjdk-21 nao disponivel — instalando openjdk-17."
+        sudo apt install -y openjdk-17-jdk
+      fi
+      ;;
     fedora)  sudo dnf install -y java-21-openjdk-devel ;;
   esac
 }
