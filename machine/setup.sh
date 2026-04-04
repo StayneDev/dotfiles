@@ -523,7 +523,12 @@ setup_vscode() {
 # =============================================================================
 install_claude_config() {
   echo -e "\n[10/10] Configurando Claude Code (skills e settings)..."
-  bash <(curl -fsSL https://raw.githubusercontent.com/StayneDev/claude-config/main/install.sh)
+  local REPO_DIR="$HOME/claude-config"
+  # repo privado — clone via SSH (requer --github feito antes)
+  if [ ! -d "$REPO_DIR/.git" ]; then
+    git clone git@github.com:StayneDev/claude-config.git "$REPO_DIR"
+  fi
+  bash "$REPO_DIR/install.sh"
   echo "  [OK] Claude config instalado."
 }
 
