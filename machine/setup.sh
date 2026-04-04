@@ -103,7 +103,14 @@ install_flatpak_apps() {
   echo -e "\n[2/7] Instalando apps via Flatpak..."
   flatpak install -y flathub com.discordapp.Discord
   flatpak install -y flathub com.valvesoftware.Steam
-  flatpak install -y flathub org.mozilla.firefox
+
+  # Firefox: instala via Flatpak apenas se nao houver versao nativa
+  if command -v firefox &>/dev/null; then
+    echo "  [INFO] Firefox nativo detectado ($(firefox --version 2>/dev/null | head -1)) — pulando instalacao Flatpak."
+    echo "  [INFO] Para usar o Flatpak no lugar do nativo, execute: bash setup.sh --remove-native-firefox"
+  else
+    flatpak install -y flathub org.mozilla.firefox
+  fi
 }
 
 # =============================================================================
@@ -264,11 +271,13 @@ setup_firefox() {
   # Tenta perfil nativo
   if [ -d "$HOME/.mozilla/firefox" ]; then
     FIREFOX_PROFILE=$(find "$HOME/.mozilla/firefox" -maxdepth 1 -name "*.default*" -type d | head -1)
+    [ -n "$FIREFOX_PROFILE" ] && echo "  [INFO] Usando Firefox nativo: $FIREFOX_PROFILE"
   fi
 
   # Tenta perfil Flatpak
   if [ -z "$FIREFOX_PROFILE" ] && [ -d "$HOME/.var/app/org.mozilla.firefox/.mozilla/firefox" ]; then
     FIREFOX_PROFILE=$(find "$HOME/.var/app/org.mozilla.firefox/.mozilla/firefox" -maxdepth 1 -name "*.default*" -type d | head -1)
+    [ -n "$FIREFOX_PROFILE" ] && echo "  [INFO] Usando Firefox Flatpak: $FIREFOX_PROFILE"
   fi
 
   if [ -z "$FIREFOX_PROFILE" ]; then
@@ -368,6 +377,32 @@ install_sshpilot() {
 # =============================================================================
 # 9. LOGINS RUNTIME — Discord, Steam, Tailscale
 # =============================================================================
+# =============================================================================
+# UTILITARIO — remover Firefox nativo e instalar Flatpak
+# =============================================================================
+remove_native_firefox() {
+  echo -e "\n[firefox] Removendo Firefox nativo e instalando Flatpak..."
+  case $DISTRO in
+    arch)
+      sudo pacman -Rns --noconfirm firefox 2>/dev/null || echo "  [INFO] firefox nativo nao encontrado via pacman."
+      ;;
+    debian)
+      sudo apt remove -y --purge firefox-esr firefox 2>/dev/null || true
+      sudo apt autoremove -y
+      ;;
+    fedora)
+      sudo dnf remove -y firefox 2>/dev/null || true
+      ;;
+  esac
+  # Remove perfil nativo (backup antes)
+  if [ -d "$HOME/.mozilla/firefox" ]; then
+    mv "$HOME/.mozilla/firefox" "$HOME/.mozilla/firefox.bak.$(date +%Y%m%d%H%M%S)"
+    echo "  [OK] Perfil nativo movido para backup em ~/.mozilla/firefox.bak.*"
+  fi
+  flatpak install -y flathub org.mozilla.firefox
+  echo "  [OK] Firefox Flatpak instalado. Execute --firefox para configurar."
+}
+
 login_firefox() {
   echo -e "\n[Firefox] Abrindo Firefox para login..."
   flatpak run org.mozilla.firefox &>/dev/null &
@@ -478,7 +513,8 @@ show_help() {
   echo "    --github        Git config + chave SSH + adicionar no GitHub (requer Bitwarden)"
   echo ""
   echo "  Logins:"
-  echo "    --login-firefox Abrir Firefox para login + Bitwarden"
+  echo "    --login-firefox        Abrir Firefox para login + Bitwarden
+    --remove-native-firefox Remover Firefox nativo e instalar via Flatpak"
   echo "    --discord       Abrir Discord para login"
   echo "    --steam         Abrir Steam para login"
   echo "    --tailscale     Autenticar Tailscale"
@@ -499,6 +535,7 @@ case "$1" in
   --github)     setup_git_ssh ;;
   --firefox)    setup_firefox ;;
   --login-firefox) login_firefox ;;
+  --remove-native-firefox) detect_distro; remove_native_firefox ;;
   --discord)    login_discord ;;
   --steam)      login_steam ;;
   --tailscale)  login_tailscale ;;
