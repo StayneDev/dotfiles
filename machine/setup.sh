@@ -368,6 +368,12 @@ install_sshpilot() {
 # =============================================================================
 # 9. LOGINS RUNTIME — Discord, Steam, Tailscale
 # =============================================================================
+login_firefox() {
+  echo -e "\n[Firefox] Abrindo Firefox para login..."
+  flatpak run org.mozilla.firefox &>/dev/null &
+  pause "Faca login no Firefox e no Bitwarden, depois feche-o (ou minimize) quando terminar"
+}
+
 login_discord() {
   echo -e "\n[Discord] Abrindo Discord para login..."
   flatpak run com.discordapp.Discord &>/dev/null &
@@ -468,14 +474,15 @@ show_help() {
   echo ""
   echo "  Configuracao:"
   echo "    --terminal      Zsh + Oh My Zsh + tema bira"
-  echo "    --github        Git config + chave SSH + adicionar no GitHub"
-  echo "    --firefox       Firefox privacidade + Bitwarden"
+  echo "    --firefox       Firefox privacidade + Bitwarden (fazer antes de --github)"
+  echo "    --github        Git config + chave SSH + adicionar no GitHub (requer Bitwarden)"
   echo ""
   echo "  Logins:"
+  echo "    --login-firefox Abrir Firefox para login + Bitwarden"
   echo "    --discord       Abrir Discord para login"
   echo "    --steam         Abrir Steam para login"
   echo "    --tailscale     Autenticar Tailscale"
-  echo "    --logins        Todos os logins em sequencia"
+  echo "    --logins        Todos os logins em sequencia (discord, steam, tailscale)"
   echo ""
 }
 
@@ -491,6 +498,7 @@ case "$1" in
   --terminal)   setup_terminal ;;
   --github)     setup_git_ssh ;;
   --firefox)    setup_firefox ;;
+  --login-firefox) login_firefox ;;
   --discord)    login_discord ;;
   --steam)      login_steam ;;
   --tailscale)  login_tailscale ;;
@@ -506,8 +514,9 @@ case "$1" in
     install_node_and_claude
     install_sshpilot
     setup_terminal
-    setup_git_ssh
     setup_firefox
+    login_firefox
+    setup_git_ssh
     setup_vscode
     install_claude_config
     runtime_logins
