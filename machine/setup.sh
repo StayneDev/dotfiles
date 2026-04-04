@@ -47,6 +47,16 @@ install_base() {
       yay -S --noconfirm visual-studio-code-bin
       ;;
     debian)
+      # Garante repos online — remove cdrom e adiciona bookworm se ausente
+      sudo sed -i '/^deb cdrom:/d' /etc/apt/sources.list
+      if ! grep -q "deb.debian.org" /etc/apt/sources.list; then
+        cat <<'EOF' | sudo tee /etc/apt/sources.list > /dev/null
+deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
+deb http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
+EOF
+        echo "  [OK] sources.list atualizado para repositorios online."
+      fi
       sudo apt update && sudo apt upgrade -y
       sudo apt install -y git curl zsh neofetch cmatrix flatpak
       # VSCode
