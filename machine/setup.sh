@@ -103,14 +103,8 @@ install_flatpak_apps() {
   echo -e "\n[2/7] Instalando apps via Flatpak..."
   flatpak install -y flathub com.discordapp.Discord
   flatpak install -y flathub com.valvesoftware.Steam
-
-  # Firefox: instala via Flatpak apenas se nao houver versao nativa
-  if command -v firefox &>/dev/null; then
-    echo "  [INFO] Firefox nativo detectado ($(firefox --version 2>/dev/null | head -1)) — pulando instalacao Flatpak."
-    echo "  [INFO] Para usar o Flatpak no lugar do nativo, execute: bash setup.sh --remove-native-firefox"
-  else
-    flatpak install -y flathub org.mozilla.firefox
-  fi
+  # Firefox nao e instalado aqui — distros ja incluem versao nativa.
+  # Flatpak e usado apenas como fallback via --firefox quando nativo ausente.
 }
 
 # =============================================================================
@@ -260,44 +254,78 @@ setup_git_ssh() {
 }
 
 # =============================================================================
-# 7. FIREFOX — configuracao privacidade (sem senhas, sem formularios)
+# 7. FIREFOX — privacidade, segurança e Bitwarden
 # =============================================================================
-setup_firefox() {
-  echo -e "\n[7/7] Configurando Firefox..."
 
-  # Aguarda o perfil ser criado na primeira execucao
-  FIREFOX_PROFILE=""
+# Detecta qual Firefox esta disponivel e retorna o comando para abri-lo
+_firefox_cmd() {
+  if command -v firefox &>/dev/null; then
+    echo "firefox"
+  elif flatpak list --app 2>/dev/null | grep -q org.mozilla.firefox; then
+    echo "flatpak run org.mozilla.firefox"
+  else
+    echo ""
+  fi
+}
 
-  # Tenta perfil nativo
+# Detecta o diretorio do perfil ativo (nativo primeiro, Flatpak como fallback)
+_firefox_profile() {
+  local profile=""
   if [ -d "$HOME/.mozilla/firefox" ]; then
-    FIREFOX_PROFILE=$(find "$HOME/.mozilla/firefox" -maxdepth 1 -name "*.default*" -type d | head -1)
-    [ -n "$FIREFOX_PROFILE" ] && echo "  [INFO] Usando Firefox nativo: $FIREFOX_PROFILE"
+    profile=$(find "$HOME/.mozilla/firefox" -maxdepth 1 -name "*.default*" -type d | head -1)
+  fi
+  if [ -z "$profile" ] && [ -d "$HOME/.var/app/org.mozilla.firefox/.mozilla/firefox" ]; then
+    profile=$(find "$HOME/.var/app/org.mozilla.firefox/.mozilla/firefox" -maxdepth 1 -name "*.default*" -type d | head -1)
+  fi
+  echo "$profile"
+}
+
+setup_firefox() {
+  echo -e "\n[firefox] Configurando Firefox..."
+
+  local FF_CMD
+  FF_CMD=$(_firefox_cmd)
+
+  if [ -z "$FF_CMD" ]; then
+    echo "  [ERRO] Firefox nao encontrado (nativo nem Flatpak)."
+    echo "         Instale o Firefox e re-execute: bash setup.sh --firefox"
+    return 1
   fi
 
-  # Tenta perfil Flatpak
-  if [ -z "$FIREFOX_PROFILE" ] && [ -d "$HOME/.var/app/org.mozilla.firefox/.mozilla/firefox" ]; then
-    FIREFOX_PROFILE=$(find "$HOME/.var/app/org.mozilla.firefox/.mozilla/firefox" -maxdepth 1 -name "*.default*" -type d | head -1)
-    [ -n "$FIREFOX_PROFILE" ] && echo "  [INFO] Usando Firefox Flatpak: $FIREFOX_PROFILE"
+  # Se perfil nao existe, abre Firefox para criar e aguarda
+  local FIREFOX_PROFILE
+  FIREFOX_PROFILE=$(_firefox_profile)
+  if [ -z "$FIREFOX_PROFILE" ]; then
+    echo "  [INFO] Perfil nao encontrado — abrindo Firefox para criacao inicial..."
+    $FF_CMD &>/dev/null &
+    pause "Firefox aberto. Aguarde carregar completamente e depois FECHE-O para continuar"
+    FIREFOX_PROFILE=$(_firefox_profile)
   fi
 
   if [ -z "$FIREFOX_PROFILE" ]; then
-    echo "[AVISO] Perfil do Firefox nao encontrado. Abra o Firefox uma vez e re-execute esta funcao."
-    echo "        Para re-executar: bash setup.sh --firefox"
-    return
+    echo "  [ERRO] Perfil ainda nao encontrado. Abra o Firefox manualmente e re-execute: bash setup.sh --firefox"
+    return 1
   fi
 
+  echo "  [INFO] Perfil: $FIREFOX_PROFILE"
+
+  # --- user.js — perfil de privacidade e seguranca ---
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  DOTFILES_RAW="https://raw.githubusercontent.com/StayneDev/dotfiles/main/machine"
+  if [ -f "$SCRIPT_DIR/firefox-user.js" ]; then
+    cp "$SCRIPT_DIR/firefox-user.js" "$FIREFOX_PROFILE/user.js"
+  else
+    curl -fsSL "$DOTFILES_RAW/firefox-user.js" -o "$FIREFOX_PROFILE/user.js"
+  fi
+  echo "  [OK] user.js aplicado (privacidade + seguranca)."
+
   # --- Bitwarden via policies.json (force_installed) ---
-  # Funciona para Firefox nativo e Flatpak
   POLICIES_DIRS=(
     "/usr/lib/firefox/distribution"
     "/usr/lib64/firefox/distribution"
     "$HOME/.var/app/org.mozilla.firefox/etc/firefox/policies"
   )
-  for DIR in "${POLICIES_DIRS[@]}"; do
-    if sudo mkdir -p "$DIR" 2>/dev/null || mkdir -p "$DIR" 2>/dev/null; then
-      POLICIES_FILE="$DIR/policies.json"
-      cat > /tmp/firefox_policies.json <<'POLICIES'
-{
+  local BITWARDEN_POLICY='{
   "policies": {
     "ExtensionSettings": {
       "{446900e4-71c2-419f-a6a7-df9c091e268b}": {
@@ -306,53 +334,26 @@ setup_firefox() {
       }
     }
   }
-}
-POLICIES
+}'
+  for DIR in "${POLICIES_DIRS[@]}"; do
+    if sudo mkdir -p "$DIR" 2>/dev/null || mkdir -p "$DIR" 2>/dev/null; then
+      echo "$BITWARDEN_POLICY" > /tmp/firefox_policies.json
       if [[ "$DIR" == /usr/* ]]; then
-        sudo cp /tmp/firefox_policies.json "$POLICIES_FILE"
+        sudo cp /tmp/firefox_policies.json "$DIR/policies.json"
       else
-        cp /tmp/firefox_policies.json "$POLICIES_FILE"
+        cp /tmp/firefox_policies.json "$DIR/policies.json"
       fi
-      echo "  [OK] Bitwarden configurado em: $POLICIES_FILE"
+      echo "  [OK] Bitwarden policies.json em: $DIR"
     fi
   done
 
-  cat > "$FIREFOX_PROFILE/user.js" <<'EOF'
-// --- Senhas e formularios ---
-user_pref("signon.rememberSignons", false);
-user_pref("signon.autofillForms", false);
-user_pref("browser.formfill.enable", false);
-user_pref("extensions.formautofill.addresses.enabled", false);
-user_pref("extensions.formautofill.creditCards.enabled", false);
-
-// --- Telemetria e rastreamento ---
-user_pref("datareporting.healthreport.uploadEnabled", false);
-user_pref("datareporting.policy.dataSubmissionEnabled", false);
-user_pref("toolkit.telemetry.enabled", false);
-user_pref("toolkit.telemetry.unified", false);
-user_pref("browser.newtabpage.activity-stream.feeds.telemetry", false);
-user_pref("browser.newtabpage.activity-stream.telemetry", false);
-user_pref("app.shield.optoutstudies.enabled", false);
-
-// --- Sugestoes e patrocinios ---
-user_pref("browser.newtabpage.activity-stream.showSponsored", false);
-user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
-user_pref("browser.urlbar.suggest.quicksuggest.sponsored", false);
-user_pref("browser.urlbar.suggest.quicksuggest.nonsponsored", false);
-
-// --- Privacidade geral ---
-user_pref("privacy.donottrackheader.enabled", true);
-user_pref("privacy.trackingprotection.enabled", true);
-user_pref("privacy.trackingprotection.socialtracking.enabled", true);
-user_pref("geo.enabled", false);
-user_pref("media.peerconnection.enabled", false);
-
-// --- Comportamento ---
-user_pref("browser.startup.page", 3);
-user_pref("browser.aboutConfig.showWarning", false);
-EOF
-
-  echo "[OK] Firefox configurado em: $FIREFOX_PROFILE"
+  echo ""
+  echo "  ============================================================"
+  echo "  Firefox configurado. Proximos passos:"
+  echo "  1. Execute: bash setup.sh --login-firefox"
+  echo "  2. Abra o Firefox, faca login no Bitwarden"
+  echo "  3. So entao execute: bash setup.sh --github"
+  echo "  ============================================================"
 }
 
 # =============================================================================
@@ -404,9 +405,22 @@ remove_native_firefox() {
 }
 
 login_firefox() {
-  echo -e "\n[Firefox] Abrindo Firefox para login..."
-  flatpak run org.mozilla.firefox &>/dev/null &
-  pause "Faca login no Firefox e no Bitwarden, depois feche-o (ou minimize) quando terminar"
+  echo -e "\n[Firefox] Abrindo Firefox para login no Bitwarden..."
+  local FF_CMD
+  FF_CMD=$(_firefox_cmd)
+  if [ -z "$FF_CMD" ]; then
+    echo "  [ERRO] Firefox nao encontrado. Instale e re-execute."
+    return 1
+  fi
+  $FF_CMD &>/dev/null &
+  echo ""
+  echo "  ============================================================"
+  echo "  Firefox aberto."
+  echo "  >> Faca login na sua conta do Bitwarden"
+  echo "  >> Bitwarden devera aparecer automaticamente (via policies)"
+  echo "  >> Apos o login, MINIMIZE o Firefox (nao feche)"
+  echo "  ============================================================"
+  pause "Pressione ENTER quando o Bitwarden estiver logado"
 }
 
 login_discord() {
