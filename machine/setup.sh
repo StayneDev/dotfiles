@@ -59,10 +59,17 @@ EOF
       fi
       sudo apt update && sudo apt upgrade -y
       sudo apt install -y git curl zsh neofetch cmatrix flatpak
-      # VSCode
-      wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /usr/share/keyrings/microsoft.gpg > /dev/null
+      # VSCode — usa curl (wget pode nao estar disponivel)
+      curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /usr/share/keyrings/microsoft.gpg > /dev/null
       echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list
-      sudo apt update && sudo apt install -y code
+      VSCODE_UPDATE=$(sudo apt update 2>&1 || true)
+      if echo "$VSCODE_UPDATE" | grep -q "NO_PUBKEY"; then
+        echo "  [AVISO] Chave GPG do VSCode invalida — removendo repo e pulando instalacao."
+        sudo rm -f /etc/apt/sources.list.d/vscode.list /usr/share/keyrings/microsoft.gpg
+        sudo apt update
+      else
+        sudo apt install -y code
+      fi
       # Tailscale
       curl -fsSL https://tailscale.com/install.sh | sh
       ;;
