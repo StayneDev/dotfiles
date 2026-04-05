@@ -409,29 +409,33 @@ login_firefox() {
     $FF_CMD &>/dev/null &
     echo ""
     echo "  ============================================================"
-    echo "  Firefox aberto. Bitwarden sera ativado automaticamente."
-    echo "  >> Faca login na sua conta Bitwarden"
-    echo "  >> Se nao aparecer, use o link de fallback:"
-    echo "     $BITWARDEN_AMO"
-    echo "  >> Importe suas configuracoes/cofre se necessario"
-    echo "  >> Pin na toolbar: botao direito no icone > Fixar na barra"
-    echo "  >> MINIMIZE o Firefox (nao feche)"
+    echo "  Firefox aberto. O icone do Bitwarden aparecera na toolbar."
+    echo ""
+    echo "  O QUE FAZER:"
+    echo "  1. Clique no icone do Bitwarden na toolbar"
+    echo "  2. Clique em 'Criar conta' ou 'Fazer login'"
+    echo "  3. Entre com seu email e senha mestre"
+    echo "  4. Se o cofre nao sincronizar, clique em 'Sincronizar cofre'"
+    echo ""
+    echo "  Se o icone nao aparecer:"
+    echo "  >> Clique no icone de extensoes (quebra-cabeca) > Bitwarden > fixar"
     echo "  ============================================================"
   else
     # XPI ausente — abre direto na pagina de instalacao (1 clique)
     $FF_CMD "$BITWARDEN_AMO" &>/dev/null &
     echo ""
     echo "  ============================================================"
-    echo "  Firefox aberto na pagina do Bitwarden."
-    echo "  >> Clique em 'Adicionar ao Firefox' para instalar"
-    echo "  >> Faca login na sua conta Bitwarden"
-    echo "  >> Importe suas configuracoes/cofre se necessario"
-    echo "  >> Pin na toolbar: botao direito no icone > Fixar na barra"
-    echo "  >> MINIMIZE o Firefox (nao feche)"
+    echo "  Firefox aberto na pagina do Bitwarden na AMO."
+    echo ""
+    echo "  O QUE FAZER:"
+    echo "  1. Clique em 'Adicionar ao Firefox' e confirme a permissao"
+    echo "  2. Clique no icone do Bitwarden que apareceu na toolbar"
+    echo "  3. Entre com seu email e senha mestre"
+    echo "  4. Se o cofre nao sincronizar, clique em 'Sincronizar cofre'"
     echo "  ============================================================"
   fi
 
-  pause "Pressione ENTER quando o Bitwarden estiver instalado e logado"
+  pause "Pressione ENTER quando estiver logado no Bitwarden"
 }
 
 login_discord() {
@@ -450,9 +454,9 @@ login_tailscale() {
   echo -e "\n[Tailscale] Autenticacao via auth key..."
   echo ""
   local FF_CMD; FF_CMD=$(_firefox_cmd)
-  [ -n "$DISPLAY" ] && [ -n "$FF_CMD" ] && $FF_CMD "https://login.tailscale.com/admin/settings/keys" &>/dev/null &
+  [ -n "$DISPLAY" ] && [ -n "$FF_CMD" ] && $FF_CMD "https://login.tailscale.com/admin/machines/new-linux" &>/dev/null &
   echo "  ============================================================"
-  echo "  1. Acesse: https://login.tailscale.com/admin/settings/keys"
+  echo "  1. Acesse: https://login.tailscale.com/admin/machines/new-linux"
   echo "  2. Clique em 'Generate auth key'"
   echo "  3. Marque 'Reusable' se quiser usar em mais de uma maquina"
   echo "  4. Cole a chave abaixo (formato: tskey-auth-...)"
