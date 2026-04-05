@@ -449,7 +449,8 @@ login_steam() {
 login_tailscale() {
   echo -e "\n[Tailscale] Autenticacao via auth key..."
   echo ""
-  [ -n "$DISPLAY" ] && xdg-open "https://login.tailscale.com/admin/settings/keys" 2>/dev/null &
+  local FF_CMD; FF_CMD=$(_firefox_cmd)
+  [ -n "$DISPLAY" ] && [ -n "$FF_CMD" ] && $FF_CMD "https://login.tailscale.com/admin/settings/keys" &>/dev/null &
   echo "  ============================================================"
   echo "  1. Acesse: https://login.tailscale.com/admin/settings/keys"
   echo "  2. Clique em 'Generate auth key'"
