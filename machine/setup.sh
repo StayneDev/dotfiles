@@ -447,13 +447,24 @@ login_steam() {
 }
 
 login_tailscale() {
-  echo -e "\n[Tailscale] Iniciando autenticacao Tailscale..."
-  sudo tailscale up --qr 2>/dev/null || sudo tailscale up
-  pause "Autentique o Tailscale no browser que foi aberto"
-  if tailscale status &>/dev/null; then
-    echo "  [OK] Tailscale conectado."
+  echo -e "\n[Tailscale] Autenticacao via auth key..."
+  echo ""
+  echo "  ============================================================"
+  echo "  1. Acesse: https://login.tailscale.com/admin/settings/keys"
+  echo "  2. Clique em 'Generate auth key'"
+  echo "  3. Marque 'Reusable' se quiser usar em mais de uma maquina"
+  echo "  4. Cole a chave abaixo (formato: tskey-auth-...)"
+  echo "  ============================================================"
+  read -rp "  Auth key: " TAILSCALE_KEY
+  if [ -n "$TAILSCALE_KEY" ]; then
+    sudo tailscale up --authkey="$TAILSCALE_KEY"
+    if tailscale status &>/dev/null; then
+      echo "  [OK] Tailscale conectado."
+    else
+      echo "  [AVISO] Tailscale nao confirmado. Verifique a chave e tente: sudo tailscale up --authkey=<key>"
+    fi
   else
-    echo "  [AVISO] Tailscale nao confirmado. Execute: sudo tailscale up"
+    echo "  [AVISO] Nenhuma chave informada. Execute manualmente: sudo tailscale up --authkey=<key>"
   fi
 }
 
