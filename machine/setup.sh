@@ -416,9 +416,7 @@ login_firefox() {
     echo "  2. Clique em 'Criar conta' ou 'Fazer login'"
     echo "  3. Entre com seu email e senha mestre"
     echo "  4. Se o cofre nao sincronizar, clique em 'Sincronizar cofre'"
-    echo ""
-    echo "  Se o icone nao aparecer:"
-    echo "  >> Clique no icone de extensoes (quebra-cabeca) > Bitwarden > fixar"
+    echo "  5. Fixe o icone: clique no quebra-cabeca (extensoes) > Bitwarden > fixar na toolbar"
     echo "  ============================================================"
   else
     # XPI ausente — abre direto na pagina de instalacao (1 clique)
@@ -432,6 +430,7 @@ login_firefox() {
     echo "  2. Clique no icone do Bitwarden que apareceu na toolbar"
     echo "  3. Entre com seu email e senha mestre"
     echo "  4. Se o cofre nao sincronizar, clique em 'Sincronizar cofre'"
+    echo "  5. Fixe o icone: clique no quebra-cabeca (extensoes) > Bitwarden > fixar na toolbar"
     echo "  ============================================================"
   fi
 
