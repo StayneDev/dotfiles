@@ -168,7 +168,7 @@ prova_passo() { # o comando que PROVA cada passo — instalado não é rodado, �
     login_discord) return 0 ;;  # idem
     login_steam)   return 0 ;;  # idem
     tailscale)     tailscale status &>/dev/null ;;
-    claude_config) [ -d "$HOME/Documentos/repos/orquestrador-normativo-agente/.git" ] ;;
+    claude_config) [ -d "$HOME/Documentos/repos/O.N.A/.git" ] ;;
     clone_infra)   [ -d "$HOME/Documentos/repos/bootstrap-infra/.git" ] ;;
     *) return 1 ;;
   esac

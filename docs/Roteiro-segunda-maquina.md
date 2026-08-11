@@ -28,9 +28,9 @@
 >
 > ```bash
 > cd ~/Documentos/repos
-> mv orquestrador-normativo-agente-acervo orquestrador-normativo-agente
+> mv orquestrador-normativo-agente-acervo O.N.A
 > rm -rf orquestrador-normativo-agente-maquinaria      # o clone antigo do motor; nada seu mora nele
-> bash orquestrador-normativo-agente/install.sh
+> bash O.N.A/install.sh
 > ```
 >
 > **Antes do `rm -rf`, conferir que nada seu mora no clone antigo:**
