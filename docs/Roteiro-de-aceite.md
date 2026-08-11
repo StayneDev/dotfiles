@@ -65,10 +65,10 @@ Abra um **terminal novo** (para o zsh e o PATH do nvm valerem):
 
 ```bash
 claude --version                                            # o binário responde
-grep -c 'orquestrador-normativo-agente/scripts/' ~/.claude/settings.json   # espera: 9
+grep -c 'O.N.A/scripts/' ~/.claude/settings.json   # espera: 7
 ls -la ~/repos/orquestrador-normativo-agente/sistema  # symlink → maquinaria
 bash ~/repos/orquestrador-normativo-agente/scripts/verificador-de-maquinaria.sh
-bash ~/repos/orquestrador-normativo-agente/scripts/verificador-de-forma.sh
+bash ~/Documentos/repos/O.N.A/scripts/verificador-de-forma.sh
 ```
 
 - [ ] Verificadores verdes
