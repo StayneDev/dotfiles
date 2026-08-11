@@ -829,7 +829,7 @@ install_claude_config() {
   # repo privado — clone via SSH (requer --github feito antes)
   mkdir -p "$HOME/Documentos/repos"
   if [ ! -d "$ORQ_DIR/.git" ]; then
-    git clone git@github.com:StayneDev/orquestrador-normativo-agente.git "$ORQ_DIR"
+    git clone git@github.com:StayneDev/O.N.A.git "$ORQ_DIR"
   fi
   bash "$ORQ_DIR/install.sh"
   echo "  [OK] Orquestrador instalado."
