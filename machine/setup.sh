@@ -820,7 +820,12 @@ install_claude_config() {
   # revogada (ADR-20260805-revogacao-do-par, no repo do orquestrador) e clonar
   # um repo é estritamente mais simples que garantir a adjacência de dois: era
   # essa adjacência que o `install.sh` do par tratava como bootstrap incompleto.
-  local ORQ_DIR="$HOME/Documentos/repos/orquestrador-normativo-agente"
+  # O diretório se chama O.N.A desde o batismo de 2026-08-07; o repo no GitHub
+  # ainda responde pelo nome antigo e redireciona. O settings.json versionado
+  # aponta para $ORQ_RAIZ/O.N.A, então o nome do DIRETÓRIO é o que importa —
+  # clonar com o nome velho deixa os 7 ganchos apontando para caminho que não
+  # existe, e o carregador falha no primeiro token da sessão.
+  local ORQ_DIR="$HOME/Documentos/repos/O.N.A"
   # repo privado — clone via SSH (requer --github feito antes)
   mkdir -p "$HOME/Documentos/repos"
   if [ ! -d "$ORQ_DIR/.git" ]; then
@@ -828,6 +833,26 @@ install_claude_config() {
   fi
   bash "$ORQ_DIR/install.sh"
   echo "  [OK] Orquestrador instalado."
+
+  # A SONDA DO O.N.A HUB — sem ela a frota é cega para esta máquina, e o painel
+  # mostra o estado de quem empurrou por último em vez do conjunto. O agregador
+  # vive no CT 102; o TOKEN é segredo compartilhado e NÃO entra em repo (Segredos).
+  echo -e "\n[fechar] Instalando a sonda do O.N.A HUB..."
+  local HUB_DIR="$HOME/Documentos/projetos/O.N.A-HUB"
+  mkdir -p "$HOME/Documentos/projetos"
+  if [ ! -d "$HUB_DIR/.git" ]; then
+    git clone git@github.com:StayneDev/O.N.A-HUB.git "$HUB_DIR"
+  fi
+  if [ -n "${ORQ_AGREGADOR:-}" ] && [ -n "${ORQ_TOKEN:-}" ]; then
+    bash "$HUB_DIR/install.sh" "$ORQ_AGREGADOR" "$ORQ_TOKEN" sonda
+    # serviço de usuário morre no logout sem isto — a sonda tem de sobreviver a reboot
+    loginctl enable-linger "$USER" 2>/dev/null || true
+    echo "  [OK] Sonda instalada e com linger."
+  else
+    echo "  [PENDENTE] sonda NÃO instalada: exporte ORQ_AGREGADOR e ORQ_TOKEN e rode"
+    echo "             bash $HUB_DIR/install.sh <url> <token> sonda && loginctl enable-linger $USER"
+    echo "             (o token é segredo e por isso não mora aqui — ver [[Segredos]])"
+  fi
 }
 
 # =============================================================================
